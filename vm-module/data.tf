@@ -1,5 +1,5 @@
 data "azurerm_resource_group" "main" {
-  name = "project-setup-1"
+  name = "project-setup1"
 }
 
 data "azurerm_subnet" "main" {
