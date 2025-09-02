@@ -86,6 +86,7 @@ terraform {
     container_name       = "tools-tf-state"
     key                  = "terraform.tfstate"
   }
+
 }
 
 provider "azurerm" {
