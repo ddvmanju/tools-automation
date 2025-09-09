@@ -3,7 +3,7 @@ data "azurerm_resource_group" "main" {
 }
 
 data "azurerm_subnet" "main" {
-  name                 = "workstation-vnet"
+  name                 = "default"
   virtual_network_name = "main"
   resource_group_name  = data.azurerm_resource_group.main.name
 }
