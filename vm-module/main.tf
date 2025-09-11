@@ -68,7 +68,7 @@ resource "azurerm_network_interface_security_group_association" "main" {
 
 resource "azurerm_dns_a_record" "private" {
   name                = "${var.component}-internal"
-  zone_name           = "azdevopsb82.online"
+  zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
   ttl                 = 10
   records             = [azurerm_network_interface.main.private_ip_address]
