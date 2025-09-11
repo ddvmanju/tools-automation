@@ -66,7 +66,21 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
+data "azurerm_public_ip" "main" {
+  depends_on          = [azurerm_virtual_machine.main]
+  name                = azurerm_public_ip.main.name
+  resource_group_name = data.azurerm_resource_group.main.name
+}
+
+# Data source to get the private IP from NIC after VM creation
+data "azurerm_network_interface" "main_nic" {
+  depends_on          = [azurerm_virtual_machine.main]
+  name                = azurerm_network_interface.main.name
+  resource_group_name = data.azurerm_resource_group.main.name
+}
+
 resource "azurerm_dns_a_record" "private" {
+  depends_on          = [data.azurerm_network_interface.main_nic]
   name                = "${var.component}-internal"
   zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
@@ -122,7 +136,7 @@ storage_image_reference {
 }
 
 resource "azurerm_dns_a_record" "public" {
-  depends_on          = [azurerm_virtual_machine.main]
+  depends_on          = [data.azurerm_public_ip.main]
   name                = var.component
   zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
