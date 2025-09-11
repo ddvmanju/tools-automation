@@ -72,24 +72,10 @@ data "azurerm_public_ip" "main" {
   resource_group_name = data.azurerm_resource_group.main.name
 }
 
-# Data source to get the private IP from NIC after VM creation
-data "azurerm_network_interface" "main_nic" {
-  depends_on          = [azurerm_virtual_machine.main]
-  name                = azurerm_network_interface.main.name
-  resource_group_name = data.azurerm_resource_group.main.name
-}
-
-resource "azurerm_dns_a_record" "private" {
-  depends_on          = [data.azurerm_network_interface.main_nic]
-  name                = "${var.component}-internal"
-  zone_name           = "azdevops.online"
-  resource_group_name = data.azurerm_resource_group.main.name
-  ttl                 = 10
-  records             = [azurerm_network_interface.main.private_ip_address]
-}
 
 resource "azurerm_virtual_machine" "main" {
-  depends_on            = [azurerm_network_interface_security_group_association.main, azurerm_dns_a_record.private]
+  #depends_on            = [azurerm_network_interface_security_group_association.main, azurerm_dns_a_record.private]
+  depends_on            = [azurerm_network_interface_security_group_association.main]
   name                  = var.component
   location              = data.azurerm_resource_group.main.location
   resource_group_name   = data.azurerm_resource_group.main.name
@@ -142,6 +128,22 @@ resource "azurerm_dns_a_record" "public" {
   resource_group_name = data.azurerm_resource_group.main.name
   ttl                 = 10
   records             = [azurerm_public_ip.main.ip_address]
+}
+
+# Data source to get the private IP from NIC after VM creation
+data "azurerm_network_interface" "main_nic" {
+  depends_on          = [azurerm_virtual_machine.main]
+  name                = azurerm_network_interface.main.name
+  resource_group_name = data.azurerm_resource_group.main.name
+}
+
+resource "azurerm_dns_a_record" "private" {
+  depends_on          = [data.azurerm_network_interface.main_nic]
+  name                = "${var.component}-internal"
+  zone_name           = "azdevops.online"
+  resource_group_name = data.azurerm_resource_group.main.name
+  ttl                 = 10
+  records             = [azurerm_network_interface.main.private_ip_address]
 }
 
 
