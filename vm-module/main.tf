@@ -90,6 +90,13 @@ resource "azurerm_virtual_machine" "main" {
    # id = "/subscriptions/00f9828e-4aad-42e5-ac92-a3c54883cbd3/resourceGroups/project-setup1/providers/Microsoft.Compute/galleries/custompractice/images/customimage"
   #}
 
+storage_image_reference {
+    publisher = "RedHat"
+    offer     = "RHEL"
+    sku       = "8.8"
+    version   = "latest"
+  }
+
   storage_os_disk {
     name              = var.component
     caching           = "ReadWrite"
