@@ -4,6 +4,6 @@ data "azurerm_resource_group" "main" {
 
 data "azurerm_subnet" "main" {
   name                 = "vnet-ukwest"
-  virtual_network_name = "main"
+  virtual_network_name = "vnet-ukwest"
   resource_group_name  = data.azurerm_resource_group.main.name
 }
