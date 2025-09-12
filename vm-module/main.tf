@@ -1,9 +1,8 @@
 resource "azurerm_public_ip" "main" {
-  name                = "${var.component}-ip"
-  location            = data.azurerm_resource_group.main.location
+  name                = var.component
   resource_group_name = data.azurerm_resource_group.main.name
-  allocation_method   = "Dynamic"
-  sku                 = "Basic"
+  location            = data.azurerm_resource_group.main.location
+  allocation_method   = "Static"
 
   tags = {
     component = "${var.component}-ip"
@@ -29,30 +28,15 @@ resource "azurerm_network_security_group" "main" {
   resource_group_name = data.azurerm_resource_group.main.name
 
   security_rule {
-    name                       = "ssh"
+    name                       = "main"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
+    source_port_range          = "22"
     destination_port_range     = "22"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
-  }
-
-  dynamic "security_rule" {
-    for_each = var.ports
-    content {
-      name                       = security_rule.value["name"]
-      priority                   = security_rule.value["priority"]
-      direction                  = "Inbound"
-      access                     = "Allow"
-      protocol                   = "Tcp"
-      source_port_range          = "*"
-      destination_port_range     = security_rule.value["port"]
-      source_address_prefix      = "*"
-      destination_address_prefix = "*"
-    }
   }
 
   tags = {
@@ -60,41 +44,33 @@ resource "azurerm_network_security_group" "main" {
   }
 }
 
+resource "azurerm_dns_a_record" "main" {
+  name                = var.component
+  zone_name           = "azdevops.online"
+  resource_group_name = data.azurerm_resource_group.main.name
+  ttl                 = 10
+  records             = [azurerm_network_interface.main.ip_configuration[0].private_ip_address]
+  #records             = [azurerm_network_interface.main.private_ip_address]
+}
 
 resource "azurerm_network_interface_security_group_association" "main" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
-data "azurerm_public_ip" "main" {
-  depends_on          = [azurerm_virtual_machine.main]
-  name                = azurerm_public_ip.main.name
-  resource_group_name = data.azurerm_resource_group.main.name
-}
-
 
 resource "azurerm_virtual_machine" "main" {
-  #depends_on            = [azurerm_network_interface_security_group_association.main, azurerm_dns_a_record.private]
-  depends_on            = [azurerm_network_interface_security_group_association.main]
   name                  = var.component
   location              = data.azurerm_resource_group.main.location
   resource_group_name   = data.azurerm_resource_group.main.name
   network_interface_ids = [azurerm_network_interface.main.id]
-  vm_size               = var.vm_size
+  vm_size               = "Standard_B2s"
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
   delete_os_disk_on_termination = true
 
-
-  #storage_image_reference {
-   # id = "/subscriptions/00f9828e-4aad-42e5-ac92-a3c54883cbd3/resourceGroups/project-setup1/providers/Microsoft.Compute/galleries/custompractice/images/customimage"
-  #}
-
-storage_image_reference {
-    publisher = "RedHat"
-    offer     = "RHEL"
-    sku       = "8-lvm-gen2"
-    version   = "latest"
+  storage_image_reference {
+    id = "/subscriptions/00f9828e-4aad-42e5-ac92-a3c54883cbd3/resourceGroups/project-setup1/providers/Microsoft.Compute/galleries/customPractice/images/CustomImage/versions/1.0.0"
   }
 
   storage_os_disk {
@@ -114,43 +90,4 @@ storage_image_reference {
   tags = {
     component = var.component
   }
-
-  #   identity {
-  #     type = "SystemAssigned"
-  #   }
-
 }
-
-resource "azurerm_dns_a_record" "public" {
-  depends_on          = [data.azurerm_public_ip.main]
-  name                = var.component
-  zone_name           = "azdevops.online"
-  resource_group_name = data.azurerm_resource_group.main.name
-  ttl                 = 10
-  records             = [azurerm_public_ip.main.ip_address]
-}
-
-# Data source to get the private IP from NIC after VM creation
-data "azurerm_network_interface" "main_nic" {
-  depends_on          = [azurerm_virtual_machine.main]
-  name                = azurerm_network_interface.main.name
-  resource_group_name = data.azurerm_resource_group.main.name
-}
-
-resource "azurerm_dns_a_record" "private" {
-  depends_on          = [data.azurerm_network_interface.main_nic]
-  name                = "${var.component}-internal"
-  zone_name           = "azdevops.online"
-  resource_group_name = data.azurerm_resource_group.main.name
-  ttl                 = 10
-  records             = [azurerm_network_interface.main.private_ip_address]
-}
-
-
-# resource "azurerm_role_assignment" "role-assignment" {
-#   depends_on           = [azurerm_virtual_machine.main]
-#   count                = var.role_definition_name == null ? 0 : 1
-#   scope                = data.azurerm_resource_group.main.id
-#   role_definition_name = var.role_definition_name
-#   principal_id         = azurerm_virtual_machine.main.identity[0].principal_id
-# }
