@@ -60,7 +60,7 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
-resource "azurerm_dns_a_record" "main" {
+resource "azurerm_dns_a_record" "private" {
   name                = var.component
   zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
