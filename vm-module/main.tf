@@ -1,5 +1,5 @@
 resource "azurerm_public_ip" "main" {
-  name                = var.component
+  name                = "${var.component}-ip"
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
   allocation_method   = "Static"
@@ -39,6 +39,17 @@ resource "azurerm_network_security_group" "main" {
     destination_address_prefix = "*"
   }
 
+  security_rule {
+    name                       = var.component
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = var.port
+    destination_port_range     = var.port
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
   tags = {
     component = "${var.component}-nsg"
   }
@@ -49,8 +60,7 @@ resource "azurerm_dns_a_record" "main" {
   zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
   ttl                 = 10
-  records             = [azurerm_network_interface.main.ip_configuration[0].private_ip_address]
-  #records             = [azurerm_network_interface.main.private_ip_address]
+  records             = [azurerm_network_interface.main.private_ip_address]
 }
 
 resource "azurerm_network_interface_security_group_association" "main" {
@@ -60,6 +70,7 @@ resource "azurerm_network_interface_security_group_association" "main" {
 
 
 resource "azurerm_virtual_machine" "main" {
+  depends_on            = [azurerm_network_interface_security_group_association.main, azurerm_dns_a_record.main]
   name                  = var.component
   location              = data.azurerm_resource_group.main.location
   resource_group_name   = data.azurerm_resource_group.main.name
