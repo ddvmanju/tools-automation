@@ -15,7 +15,6 @@ variable "tools" {
     vault = {
       vm_size = "Standard_B2s"
       port = {
-        vault = {
           name     = "vault"
           priority = 101
           port     = 8200
