@@ -22,7 +22,7 @@ variable "tools" {
       }
     }
   }
-}
+
 
 
 variable "ssh_username" {}
