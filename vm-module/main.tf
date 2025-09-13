@@ -72,7 +72,7 @@ resource "azurerm_dns_a_record" "public" {
  name                = var.component
  zone_name           = "azdevops.online"
  resource_group_name = data.azurerm_resource_group.main.name
- ttl                 = 10
+ ttl                 = 300 # earlier it was 10
  records             = [azurerm_public_ip.main.ip_address]
 }
 resource "azurerm_virtual_machine" "main" {
