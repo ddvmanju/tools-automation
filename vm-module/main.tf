@@ -61,20 +61,20 @@ resource "azurerm_network_interface_security_group_association" "main" {
 }
 
 resource "azurerm_dns_a_record" "main" {
-  name                = var.component #"${var.component}-internal"
+  name                = "${var.component}-internal"
   zone_name           = "azdevops.online"
   resource_group_name = data.azurerm_resource_group.main.name
   ttl                 = 10
   records             = [azurerm_network_interface.main.private_ip_address]
 }
 
-#resource "azurerm_dns_a_record" "public" {
- # name                = var.component
-  #zone_name           = "azdevops.online"
-  #resource_group_name = data.azurerm_resource_group.main.name
-  #ttl                 = 10
-  #records             = [azurerm_public_ip.main.ip_address]
-#}
+resource "azurerm_dns_a_record" "public" {
+ name                = var.component
+ zone_name           = "azdevops.online"
+ resource_group_name = data.azurerm_resource_group.main.name
+ ttl                 = 10
+ records             = [azurerm_public_ip.main.ip_address]
+}
 resource "azurerm_virtual_machine" "main" {
   depends_on            = [azurerm_network_interface_security_group_association.main, azurerm_dns_a_record.main]
   name                  = var.component
